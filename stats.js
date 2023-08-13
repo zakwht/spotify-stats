@@ -1,6 +1,6 @@
 const { readdirSync, readFileSync } = require("fs")
 
-const all = [{
+all = [{
   spotify_track_uri: "",
   ts: "",
   ms_played: 0,
@@ -50,6 +50,7 @@ const parse = (datequery) => {
       if (!total[k][i])
         total[k][i] = {
           ...template,
+          name: s[`master_metadata_${k}`],
           artist: s.master_metadata_album_artist_name,
           first: s.ts,
           uri: s.spotify_track_uri // uri of first song
@@ -82,6 +83,15 @@ const parse = (datequery) => {
   }
 }
 
+const top100All = () => {
+  const { artists, albums, songs } = parse()
+  console.log(JSON.stringify({
+    artists: artists.slice(0,100),
+    albums: albums.slice(0,100),
+    songs: songs.slice(0,100)
+  }, null, 2))
+}
+
 findSkips = (datequery, minSkip=20, threshold=80) => {
   const { total } = parse(datequery)
   Object.values(total.track_name).forEach(s => {
@@ -111,4 +121,4 @@ topArtists = (datequery, n=25) => {
   artists.slice(0,n).forEach(([,s], i) => console.log(`${String(i+1).padStart(n.toString().length+2, ' ')}. ${s.name} (${timeFormat(s.ms)})`))
 }
 
-require('repl').start({ignoreUndefined: true});
+process.argv[2] == 'dist' ? top100All () : require('repl').start({ignoreUndefined: true});
