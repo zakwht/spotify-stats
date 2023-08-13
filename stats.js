@@ -16,6 +16,16 @@ readdirSync("json").forEach(file => {
   all.push(...JSON.parse(readFileSync("json/" + file).toString()))
 })
 
+const toLocalTz = ds => {
+  let d = new Date(ds)
+  const offset = d.getTimezoneOffset()
+  d = new Date(d.getTime() - (offset*60*1000))
+  return d.toISOString()
+}
+
+const hourStr = ms => (ms / 1000 / 60 / 60).toFixed(2) + 'h';
+const minStr = ms => (ms / 1000 / 60).toFixed(2) + 'min'
+
 const parse = (datequery) => {
   keys = ["track_name", "album_album_name", "album_artist_name", "conn_country"]
   let total = {
@@ -30,7 +40,7 @@ const parse = (datequery) => {
 
   all.forEach(s => {
     if (!s.spotify_track_uri) return
-    if (datequery && !s.ts.startsWith(datequery)) return
+    if (datequery && !toLocalTz(s.ts).startsWith(datequery)) return
   
     if (s.ms_played > 30 * 1000) {
       total.count = total.count + 1
@@ -86,8 +96,8 @@ const parse = (datequery) => {
 const top100All = () => {
   const { artists, albums, songs } = parse()
   console.log(JSON.stringify({
-    artists: artists.slice(0,100),
     albums: albums.slice(0,100),
+    artists: artists.slice(0,100),
     songs: songs.slice(0,100)
   }, null, 2))
 }
@@ -100,9 +110,6 @@ findSkips = (datequery, minSkip=20, threshold=80) => {
       console.log(`${s.name} ${s.skip} ${skipRate.toFixed(2)}%`)
   })
 }
-
-const hourStr = ms => (ms / 1000 / 60 / 60).toFixed(2) + 'h';
-const minStr = ms => (ms / 1000 / 60).toFixed(2) + 'min'
 
 topTracks = (datequery, n=25) => {
   const { songs } = parse(datequery);
